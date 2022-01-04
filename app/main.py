@@ -19,20 +19,20 @@ models.Base.metadata.create_all(engine)
 app = FastAPI()
 
 
-@app.get("/posts", status_code=status.HTTP_200_OK)
+@app.get("/posts", status_code=status.HTTP_200_OK, response_model=List[schemas.PostResponse])
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     return posts
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post:schemas.CreatePost, db: Session = Depends(get_db)):
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
+def create_post(post:schemas.PostBase, db: Session = Depends(get_db)):
     newPost = models.Post(**post.dict())
     db.add(newPost)
     db.commit()
     db.refresh(newPost)
     return newPost
 
-@app.get("/posts/{id}", status_code=status.HTTP_200_OK)
+@app.get("/posts/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
 def get_post(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if post is None:
@@ -48,8 +48,8 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@app.put("/posts/{id}", status_code=status.HTTP_200_OK)
-def update_post(id: int, post: schemas.UpdatePost, db: Session = Depends(get_db)):
+@app.put("/posts/{id}", status_code=status.HTTP_200_OK, response_model=schemas.PostResponse)
+def update_post(id: int, post: schemas.PostBase, db: Session = Depends(get_db)):
     update_post_query = db.query(models.Post).filter(models.Post.id == id)
     post_to_update = update_post_query.first()
     if post_to_update is None:
